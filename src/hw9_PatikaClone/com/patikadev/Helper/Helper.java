@@ -29,4 +29,37 @@ public class Helper {
         return center;
     }
 
+    public static boolean isTextFieldEmpty(JTextField textField) {
+        return textField.getText().trim().isEmpty();
+    }
+
+    public static void showMessage(String str) {
+        String message;
+        String title;
+        switch (str) {
+            case "fill":
+                message = "Lütfen tüm alanları doldurunuz";
+                title = "Uyarı";
+                break;
+            case "success":
+                message = "İşlem başarılı";
+                title = "Sonuç";
+                break;
+            case "error":
+                message = "Bir hata oluştu";
+                title = "Hata";
+                break;
+            default:
+                message = str;
+                title = "Mesaj";
+        }
+
+        setOptionPaneTurkish();
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void setOptionPaneTurkish(){
+        UIManager.put("OptionPane.okButtonText", "Tamam");
+    }
+
 }

@@ -3,6 +3,7 @@ package hw9_PatikaClone.com.patikadev.View;
 import hw9_PatikaClone.com.patikadev.Helper.Config;
 import hw9_PatikaClone.com.patikadev.Helper.Helper;
 import hw9_PatikaClone.com.patikadev.Model.Admin;
+import hw9_PatikaClone.com.patikadev.Model.Patika;
 import hw9_PatikaClone.com.patikadev.Model.User;
 
 import javax.swing.*;
@@ -10,8 +11,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.List;
 
 public class AdminGUI extends JFrame {
@@ -41,8 +42,15 @@ public class AdminGUI extends JFrame {
     private JTextField fld_search_username;
     private JComboBox cbox_search_type;
     private JButton btn_user_search;
+    private JPanel pnl_patika;
+    private JScrollPane scroll_patika;
+    private JTable tbl_patika_list;
+    private JPanel pnl_patika_add;
+    private JTextField fld_patika_name;
+    private JButton btn_patika_add;
     private DefaultTableModel mdl_users;
-    private Object[] row_users;
+    private DefaultTableModel mdl_patika_list;
+    private JPopupMenu menu_patika;
 
     private final Admin admin;
 
@@ -99,6 +107,56 @@ public class AdminGUI extends JFrame {
             }
         });
 
+        // patika menu
+        menu_patika = new JPopupMenu();
+        JMenuItem menu_update = new JMenuItem("Düzenle");
+        JMenuItem menu_delete = new JMenuItem("Sil");
+        menu_patika.add(menu_update);
+        menu_patika.add(menu_delete);
+
+        menu_update.addActionListener(e -> {
+            int selectedId = Integer.parseInt(tbl_patika_list.getValueAt(tbl_patika_list.getSelectedRow(), 0).toString());
+            PatikaUpdateGUI patikaUpdateGUI = new PatikaUpdateGUI(Patika.findById(selectedId));
+            patikaUpdateGUI.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    loadPatikaModel();
+                }
+            });
+        });
+
+        menu_delete.addActionListener(e -> {
+            if (Helper.confirm("decision")) {
+                int selectedId = Integer.parseInt(tbl_patika_list.getValueAt(tbl_patika_list.getSelectedRow(), 0).toString());
+                if (Patika.delete(selectedId)) {
+                    Helper.showMessage("success");
+                    loadPatikaModel();
+                } else {
+                    Helper.showMessage("error");
+                }
+            }
+        });
+
+        // create patika table
+        mdl_patika_list = new DefaultTableModel();
+        Object[] col_patika = {"ID", "Patika Adı"};
+        mdl_patika_list.setColumnIdentifiers(col_patika);
+        loadPatikaModel();
+        tbl_patika_list.setModel(mdl_patika_list);
+        tbl_patika_list.getTableHeader().setReorderingAllowed(false);
+        tbl_patika_list.getColumnModel().getColumn(0).setMaxWidth(75);
+        tbl_patika_list.setComponentPopupMenu(menu_patika);
+
+        tbl_patika_list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                Point point = e.getPoint();
+                int selectedRow = tbl_patika_list.rowAtPoint(point);
+                tbl_patika_list.setRowSelectionInterval(selectedRow, selectedRow);
+            }
+        });
+
+
         // add user
         btn_user_add.addActionListener(e -> {
             if (Helper.isTextFieldEmpty(fld_user_name) || Helper.isTextFieldEmpty(fld_user_username) || Helper.isTextFieldEmpty(fld_user_password)){
@@ -125,11 +183,13 @@ public class AdminGUI extends JFrame {
             if (Helper.isTextFieldEmpty(fld_user_id)) {
                 Helper.showMessage("fill");
             } else {
-                if (User.delete(Integer.parseInt(fld_user_id.getText()))) {
-                    Helper.showMessage("success");
-                    loadUserModel();
-                } else {
-                    Helper.showMessage("error");
+                if (Helper.confirm("decision")) {
+                    if (User.delete(Integer.parseInt(fld_user_id.getText()))) {
+                        Helper.showMessage("success");
+                        loadUserModel();
+                    } else {
+                        Helper.showMessage("error");
+                    }
                 }
             }
         });
@@ -151,6 +211,21 @@ public class AdminGUI extends JFrame {
                 dispose();
             }
         });
+
+        // add patika
+        btn_patika_add.addActionListener(e -> {
+            if (Helper.isTextFieldEmpty(fld_patika_name)) {
+                Helper.showMessage("fill");
+            } else {
+                if (Patika.add(fld_patika_name.getText())) {
+                    Helper.showMessage("success");
+                    loadPatikaModel();
+                    fld_patika_name.setText(null);
+                } else {
+                    Helper.showMessage("error");
+                }
+            }
+        });
     }
 
     public void loadUserModel() {
@@ -164,6 +239,13 @@ public class AdminGUI extends JFrame {
         mdl_users.setRowCount(0);
         for (User user : userList) {
             mdl_users.addRow(user.getData());
+        }
+    }
+
+    private void loadPatikaModel() {
+        mdl_patika_list.setRowCount(0);
+        for (Patika patika : Patika.getList()) {
+            mdl_patika_list.addRow(patika.getData());
         }
     }
 
